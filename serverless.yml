@@ -1,0 +1,54 @@
+service: cartohub-api
+frameworkVersion: '3'
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  versionFunctions: false
+  stage: ${opt:stage, 'staging'}
+  memorySize: 128
+  timeout: 6
+  region: ap-northeast-1
+  httpApi:
+    cors: true
+  endpointType: REGIONAL
+  environment:
+    # stage dependencies
+    MAP_STORE_BUCKET_NAME: ${self:custom.${self:provider.stage}.MAP_STORE_BUCKET_NAME}
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - "s3:PutObject"
+          Resource:
+            - Fn::Join:
+                - ":"
+                - - "arn:aws:s3::"
+                  - ${self:custom.${self:provider.stage}.MAP_STORE_BUCKET_NAME}/maps/*
+
+functions:
+  api:
+    handler: src/api.lambdaHandler
+    events:
+      - httpApi:
+          method: POST
+          path: /links/upload/create
+
+custom:
+  serverless-offline:
+    noAuth: true
+
+  local:
+    MAP_STORE_BUCKET_NAME: cartohub-staging-map-store-20230817063644102200000001
+
+  staging:
+    MAP_STORE_BUCKET_NAME: cartohub-staging-map-store-20230817063644102200000001
+
+  default:
+    MAP_STORE_BUCKET_NAME: cartohub-default-map-store-00000000000000000000000000 # TODO

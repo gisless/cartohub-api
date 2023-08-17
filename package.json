@@ -1,0 +1,26 @@
+{
+  "name": "cartohub-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:gisless/cartohub-api.git",
+  "author": "kamataryo <6292312+kamataryo@users.noreply.github.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "sls offline",
+    "deploy:staging": "npx sls deploy --stage=staging",
+    "deploy:default": "npx sls deploy --stage=default"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.391.0",
+    "@aws-sdk/s3-request-presigner": "^3.391.0",
+    "@types/aws-lambda": "^8.10.119",
+    "@types/node": "^20.5.0",
+    "serverless": "^3.34.0",
+    "serverless-offline": "^12.0.4",
+    "serverless-plugin-typescript": "^2.1.5",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "uuid": "^9.0.0"
+  }
+}
