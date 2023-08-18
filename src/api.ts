@@ -9,7 +9,6 @@ export const lambdaHandler: APIGatewayProxyHandlerV2 = async (
   const { routeKey } = event
 
   // TODO: Origin guard
-
   if (routeKey === 'POST /links/upload/create') {
     return postLinksUploadCreateHandler(event)
   }

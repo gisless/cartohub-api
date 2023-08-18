@@ -2,12 +2,12 @@ import { error_response, success_response } from '../../../lib/response'
 import { APIGatewayProxyEventV2 } from 'aws-lambda'
 
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client } from '@aws-sdk/client-s3'
 import * as uuid from 'uuid'
 
 const { MAP_STORE_BUCKET_NAME } = process.env
 
-const allowedContentTypes = ['image/png', 'image/jpeg', 'image/tiff']
+const allowedContentTypes = ['image/png'] //, 'image/jpeg', 'image/tiff']
 
 type Fields = Awaited<ReturnType<typeof createPresignedPost>>['fields']
 type Response = {
@@ -29,7 +29,7 @@ export const handler = async (event: APIGatewayProxyEventV2) => {
 
   const map_id = uuid.v4().replace(/-/g, '')
 
-  const client = new S3Client();
+  const client = new S3Client({ region: 'ap-northeast-1' });
 
   const presignedPosts: Response['presignedPosts'] = {}
 
@@ -37,7 +37,7 @@ export const handler = async (event: APIGatewayProxyEventV2) => {
     const ext = contentType.split('/')[1]
     const { url, fields } = await createPresignedPost(client, {
       Bucket: MAP_STORE_BUCKET_NAME,
-      Key: `maps/${map_id}/raw.${ext}`,
+      Key: `raw_image/${map_id}.${ext}`,
       Conditions: [
         ['eq', 'content-type', contentType],
         ['content-length-range', 0, 1024 * 1024 * 200], // 200MB Limit for now

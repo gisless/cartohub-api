@@ -30,7 +30,10 @@ provider:
             - Fn::Join:
                 - ":"
                 - - "arn:aws:s3::"
-                  - ${self:custom.${self:provider.stage}.MAP_STORE_BUCKET_NAME}/maps/*
+                  - ${self:custom.${self:provider.stage}.MAP_STORE_BUCKET_NAME}/*
+
+package:
+  individually: true
 
 functions:
   api:
