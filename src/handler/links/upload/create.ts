@@ -1,20 +1,29 @@
 import { error_response, success_response } from '../../../lib/response'
 import { APIGatewayProxyEventV2 } from 'aws-lambda'
 
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import * as uuid from 'uuid'
 
 const { MAP_STORE_BUCKET_NAME } = process.env
 
-const allowedContentTypes = ['tiff', 'png', 'jpeg']
+const allowedContentTypes = ['image/png', 'image/jpeg', 'image/tiff']
 
-type Response = { [ext: string]: string }
+type Fields = Awaited<ReturnType<typeof createPresignedPost>>['fields']
+type Response = {
+  presignedPosts: {
+    [contentType: string]: {
+      url: string,
+      fields: Fields,
+    },
+  },
+  map_id: string,
+}
 
 export const handler = async (event: APIGatewayProxyEventV2) => {
 
   if(!MAP_STORE_BUCKET_NAME) {
-    console.error('MAP_STORE_BUCKET_NAME is not defined')
+    console.error('`MAP_STORE_BUCKET_NAME` is not defined')
     return error_response(500, 'Internal Server Error')
   }
 
@@ -22,16 +31,21 @@ export const handler = async (event: APIGatewayProxyEventV2) => {
 
   const client = new S3Client();
 
-  const signedUrls: Response = {}
+  const presignedPosts: Response['presignedPosts'] = {}
 
-  for (const ext of allowedContentTypes) {
-    const command = new PutObjectCommand({
+  for (const contentType of allowedContentTypes) {
+    const ext = contentType.split('/')[1]
+    const { url, fields } = await createPresignedPost(client, {
       Bucket: MAP_STORE_BUCKET_NAME,
       Key: `maps/${map_id}/raw.${ext}`,
+      Conditions: [
+        ['eq', 'content-type', contentType],
+        ['content-length-range', 0, 1024 * 1024 * 200], // 200MB Limit for now
+      ],
+      Expires: 30 * 60,
     })
-    const url = await getSignedUrl(client, command, { expiresIn: 30 * 60 })
-    signedUrls[ext] = url
+    presignedPosts[contentType] = { url, fields }
   }
 
-  return success_response<Response>(signedUrls)
+  return success_response<Response>({ presignedPosts, map_id })
 }
