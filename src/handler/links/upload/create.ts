@@ -33,13 +33,13 @@ export const handler = async (event: APIGatewayProxyEventV2) => {
 
   const presignedPosts: Response['presignedPosts'] = {}
 
+  // TODO: parallelize
   for (const contentType of allowedContentTypes) {
     const ext = contentType.split('/')[1]
     const { url, fields } = await createPresignedPost(client, {
       Bucket: MAP_STORE_BUCKET_NAME,
       Key: `raw_image/${map_id}.${ext}`,
       Conditions: [
-        ['eq', 'content-type', contentType],
         ['content-length-range', 0, 1024 * 1024 * 200], // 200MB Limit for now
       ],
       Expires: 30 * 60,

@@ -10,9 +10,8 @@ provider:
   runtime: nodejs18.x
   versionFunctions: false
   stage: ${opt:stage, 'staging'}
-  memorySize: 128
-  timeout: 6
   region: ap-northeast-1
+  logRetentionInDays: 7
   httpApi:
     cors: true
   endpointType: REGIONAL
@@ -38,6 +37,8 @@ package:
 functions:
   api:
     handler: src/api.lambdaHandler
+    memorySize: 128
+    timeout: 6
     events:
       - httpApi:
           method: POST
